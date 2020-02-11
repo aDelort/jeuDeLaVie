@@ -1,10 +1,6 @@
 ##Imports
-from tkinter import * 
-from random import *
-import matplotlib.pyplot as plt 
-import numpy as np
+from tkinter import *  
 import time
-import os
 
 ## Settings
 defaultCellSize = 10
