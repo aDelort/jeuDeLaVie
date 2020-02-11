@@ -2,6 +2,8 @@
 from tkinter import *  
 import time
 
+helpFile = open('help.txt')
+
 ## Settings
 defaultCellSize = 10
 cellSizeMin = 2
@@ -13,6 +15,24 @@ dtMax = 500 #Correspond to the min speed
 
 
 ## Classes
+class HelpWindow(Tk):
+    def __init__(self):
+        Tk.__init__(self)
+        self._helpText = Label(self,text=helpFile.read(),anchor='nw',justify='left',wraplength=800)
+        '''Le Jeu de la Vie a été immaginé par Conway en 1970 (Conway\'s Game of Life). Il est régi par \
+            des règles très simples pour déterminer, à partir d\'une génération n, la composition de la génération n+1. En théorie le jeu \
+            doit se dérouler sur une grille infinie, mais ces conditions sont évidemment impossibles sur un ordinateur.\n\n\
+            Les règles sont les suivantes :\n\
+            - Une cellule vivante entourée par exactement 2 ou 3 cellules vivantes reste vivante à la génération suivante, sinon elle meurt ;\n\
+            - Une cellule morte entourée par exactement 3 cellules vivantes naît à la génération suivante, sinon elle reste morte.\n\n\
+            Dans la grille, les cellules vivantes sont les cellules noires, tandis que les cellules mortes sont les cellules vivantes. Le clic \
+            gauche permet de faire naître une cellule, et le clic droit de la tuer.')'''
+        self._okButton = Button(self,text='Ok',command=self.destroy)
+
+        self._helpText.pack(padx=10,pady=10,side=TOP)
+        self._okButton.pack(padx=10,pady=10,side=TOP)
+
+
 class MainWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
@@ -39,6 +59,7 @@ class MainWindow(Tk):
         self._start = Button(self._bottomCommands,text='Démarrer',command=self.start)
         self._stop = Button(self._bottomCommands,text='Stop',command=self._grid.stop)
         self._quit = Button(self._bottomCommands,text='Quitter',command=self.quit)
+        self._helpButton = Button(self._rightCommands,text='Aide',command=self.popHelpBox)
 
         #Packing
         self._rightCommands.pack(padx=10,side=RIGHT)
@@ -55,6 +76,7 @@ class MainWindow(Tk):
         self._rectSelectButton.pack(side=TOP,pady=10)
         self._gridShowCheckButton.pack(side=TOP,pady=10)
         self._eraseButton.pack(side=TOP,pady=10)
+        self._helpButton.pack(side=TOP,padx=10,pady=20)
 
         self._bottomCommands.pack(padx=10,pady=10,side=BOTTOM)
         self._start.pack(side=LEFT,padx=10)
@@ -84,31 +106,30 @@ class MainWindow(Tk):
 
     def leftClick(self,event):
         #Be careful : event.x and event.y return coordinates with origin in the corner upper left
-        if self._grid._stopped:
-            i,j = self.convertCoordinates(event)
-            if not self._grid._rectSelectActivated.get():
-                self._grid.awake(i,j)
+        #if self._grid._stopped:
+        i,j = self.convertCoordinates(event) 
+        if not self._grid._rectSelectActivated.get():
+            self._grid.awake(i,j)
+        else:
+            #Just color with red the first cell
+            if not self._grid._rectSelectedOneCell.get():
+                self._grid._rectSelectedOneCell.set(1)
+                self._grid.createRedCell(i,j)
+                self._grid._redCell_i = i
+                self._grid._redCell_j = j
             else:
-                #Just color with red the first cell
-                if not self._grid._rectSelectedOneCell.get():
-                    self._grid._rectSelectedOneCell.set(1)
-                    self._grid.createRedCell(i,j)
-                    self._grid._redCell_i = i
-                    self._grid._redCell_j = j
-                else:
-                    #Awake each cell in the rectangle
-                    self._grid._rectSelectedOneCell.set(0)
-                    self._grid.deleteRedCell()
-                    i1,i2 = sorted((self._grid._redCell_i,i))
-                    j1,j2 = sorted((self._grid._redCell_j,j))
-                    for lig in range(i1,i2+1):
-                        for col in range(j1,j2+1):
-                            self._grid.awake(lig,col)
+                #Awake each cell in the rectangle
+                self._grid._rectSelectedOneCell.set(0)
+                self._grid.deleteRedCell()
+                i1,i2 = sorted((self._grid._redCell_i,i))
+                j1,j2 = sorted((self._grid._redCell_j,j))
+                for lig in range(i1,i2+1):
+                    for col in range(j1,j2+1):
+                        self._grid.awake(lig,col)
 
     def rightClick(self,event):
-        if self._grid._stopped:
-            i,j = self.convertCoordinates(event)
-            self._grid.kill(i,j)
+        i,j = self.convertCoordinates(event)
+        self._grid.kill(i,j)
 
     def rectSelection(self):
         if self._grid._rectSelectActivated.get(): #Rectangle selection was activated
@@ -131,6 +152,9 @@ class MainWindow(Tk):
         cellsAlive = self._grid._cellsAlive.copy()
         for i,j in cellsAlive:
             self._grid.kill(i,j)
+
+    def popHelpBox(self):
+        self._helpWindow = HelpWindow()
 
 
 class Grid(Canvas):
