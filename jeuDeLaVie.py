@@ -26,8 +26,8 @@ class MainWindow(Tk):
         #Definition of widgets
         self._rightCommands = Frame(self)
         self._grid = Grid(self,width=self._gridWidth,height=self._gridHeight,bg='grey')
-        self._informationFrame = LabelFrame(self._rightCommands,text="Infos")
-        self._commandFrame = LabelFrame(self._rightCommands,text="Commandes")
+        self._informationFrame = LabelFrame(self._rightCommands,text="Infos",labelanchor='n')
+        self._commandFrame = LabelFrame(self._rightCommands,text="Commandes",labelanchor='n')
         self._nbCellsScaleFrame = LabelFrame(self._commandFrame,text="Taille des cellules")
         self._nbCellsScale = Scale(self._nbCellsScaleFrame,variable=self._grid._cellSize,from_=cellSizeMin,to=cellSizeMax,command=self._grid.updateGrid,orient='horizontal',length=100)
         self._speedScaleFrame = LabelFrame(self._commandFrame,text="Vitesse")
