@@ -2,7 +2,6 @@
 from tkinter import *  
 import time
 
-helpFile = open('help.txt')
 
 ## Settings
 defaultCellSize = 10
@@ -15,27 +14,11 @@ dtMax = 500 #Correspond to the min speed
 
 
 ## Classes
-class HelpWindow(Tk):
-    def __init__(self):
-        Tk.__init__(self)
-        self._helpText = Label(self,text=helpFile.read(),anchor='nw',justify='left',wraplength=800)
-        '''Le Jeu de la Vie a été immaginé par Conway en 1970 (Conway\'s Game of Life). Il est régi par \
-            des règles très simples pour déterminer, à partir d\'une génération n, la composition de la génération n+1. En théorie le jeu \
-            doit se dérouler sur une grille infinie, mais ces conditions sont évidemment impossibles sur un ordinateur.\n\n\
-            Les règles sont les suivantes :\n\
-            - Une cellule vivante entourée par exactement 2 ou 3 cellules vivantes reste vivante à la génération suivante, sinon elle meurt ;\n\
-            - Une cellule morte entourée par exactement 3 cellules vivantes naît à la génération suivante, sinon elle reste morte.\n\n\
-            Dans la grille, les cellules vivantes sont les cellules noires, tandis que les cellules mortes sont les cellules vivantes. Le clic \
-            gauche permet de faire naître une cellule, et le clic droit de la tuer.')'''
-        self._okButton = Button(self,text='Ok',command=self.destroy)
-
-        self._helpText.pack(padx=10,pady=10,side=TOP)
-        self._okButton.pack(padx=10,pady=10,side=TOP)
-
-
 class MainWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
+        self.title('Jeu de la Vie')
+        #self._helpWindow = None
         self._gridWidth = self.winfo_screenwidth()-210
         self._gridHeight = self.winfo_screenheight()-120
 
@@ -59,7 +42,6 @@ class MainWindow(Tk):
         self._start = Button(self._bottomCommands,text='Démarrer',command=self.start)
         self._stop = Button(self._bottomCommands,text='Stop',command=self._grid.stop)
         self._quit = Button(self._bottomCommands,text='Quitter',command=self.quit)
-        self._helpButton = Button(self._rightCommands,text='Aide',command=self.popHelpBox)
 
         #Packing
         self._rightCommands.pack(padx=10,side=RIGHT)
@@ -76,7 +58,6 @@ class MainWindow(Tk):
         self._rectSelectButton.pack(side=TOP,pady=10)
         self._gridShowCheckButton.pack(side=TOP,pady=10)
         self._eraseButton.pack(side=TOP,pady=10)
-        self._helpButton.pack(side=TOP,padx=10,pady=20)
 
         self._bottomCommands.pack(padx=10,pady=10,side=BOTTOM)
         self._start.pack(side=LEFT,padx=10)
@@ -90,6 +71,7 @@ class MainWindow(Tk):
         self._grid.bind("<Button-3>",self.rightClick)
         self._grid.bind("<B1-Motion>",self.leftClick)
         self._grid.bind("<B3-Motion>",self.rightClick)
+
 
     def start(self):
         if self._grid._stopped:
@@ -152,9 +134,6 @@ class MainWindow(Tk):
         cellsAlive = self._grid._cellsAlive.copy()
         for i,j in cellsAlive:
             self._grid.kill(i,j)
-
-    def popHelpBox(self):
-        self._helpWindow = HelpWindow()
 
 
 class Grid(Canvas):
