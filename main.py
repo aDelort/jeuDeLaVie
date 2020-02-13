@@ -8,7 +8,7 @@ defaultCellSize = 10
 cellSizeMin = 2
 cellSizeMax = 100
 
-defaultSpeed = 10
+defaultSpeed = 10 #Linked to the time beetween generations
 dtMin = 50 #Corresponds to the max speed
 dtMax = 500 #Correspond to the min speed
 
@@ -18,7 +18,6 @@ class MainWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
         self.title('Jeu de la Vie')
-        #self._helpWindow = None
         self._gridWidth = self.winfo_screenwidth()-210
         self._gridHeight = self.winfo_screenheight()-120
 
@@ -74,21 +73,23 @@ class MainWindow(Tk):
 
 
     def start(self):
+        #Start button
         if self._grid._stopped:
             self._grid._stopped = False
             self._grid.updateCellsState()
 
     def quit(self):
+         #Quit button
         self.destroy()
 
     def convertCoordinates(self,event):
+        #Converts the output of the mouse click event (x,y) into a cell row and column
         i = (event.y+self._grid._yMin)//self._grid._cellSize.get()
         j = (event.x+self._grid._xMin)//self._grid._cellSize.get()
         return i,j
 
     def leftClick(self,event):
-        #Be careful : event.x and event.y return coordinates with origin in the corner upper left
-        #if self._grid._stopped:
+        #event.x and event.y return coordinates with origin in the corner upper left ((x,y)!=(i,j))
         i,j = self.convertCoordinates(event) 
         if not self._grid._rectSelectActivated.get():
             self._grid.awake(i,j)
@@ -125,12 +126,14 @@ class MainWindow(Tk):
             self._rectSelectButton.config(relief=SUNKEN)
 
     def showOrHideGrid(self):
+        #Linked to the checkbox, hides of shows the grid
         if self._grid._isShowedGrid.get():
             self._grid.showGrid()
         else:
             self._grid.hideGrid()
 
     def erase(self):
+        #Kills every cells
         cellsAlive = self._grid._cellsAlive.copy()
         for i,j in cellsAlive:
             self._grid.kill(i,j)
@@ -183,6 +186,7 @@ class Grid(Canvas):
             self.awake(i,j)
 
     def showGrid(self):
+        #Draws the lines of the grid
         for x in range(0,self._xMax,self._cellSize.get()):
             self._gridLines.append(self.create_line(x,self._yMin,x,self._yMax,fill='black'))
         for x in range(0,self._xMin,-self._cellSize.get()):
@@ -193,42 +197,49 @@ class Grid(Canvas):
             self._gridLines.append(self.create_line(self._xMin,y,self._xMax,y,fill='black'))
 
     def hideGrid(self):
+        #Deletes the lines of the grid
         for line in self._gridLines:
             self.delete(line)
 
     def isAlive(self,i,j):
+        #Returns the state of a cell (alive or not)
         return (i,j) in self._cellsAlive.keys()
 
     def awake(self,i,j):
+        #Cell (i,j): dead -> alive
         if not self.isAlive(i,j):
             id = self.create_rectangle(j*self._cellSize.get(),i*self._cellSize.get(),(j+1)*self._cellSize.get(),(i+1)*self._cellSize.get(),fill='black')
             self._cellsAlive.setdefault((i,j),id)
             self._nbCells.set(self._nbCells.get()+1)
 
     def kill(self,i,j):
+        #Cell (i,j): alive -> dead
         if self.isAlive(i,j):
             id = self._cellsAlive.pop((i,j))
             self.delete(id)
             self._nbCells.set(self._nbCells.get()-1)
 
     def createRedCell(self,i,j):
+        #Create the red cell (to mark down the first corner of the rectangle selection)
         self._redCellId = self.create_rectangle(j*self._cellSize.get(),i*self._cellSize.get(),(j+1)*self._cellSize.get(),(i+1)*self._cellSize.get(),fill='red')
 
     def deleteRedCell(self):
+        #Function called when the red cell isn't needed anymore
         self.delete(self._redCellId)
 
     def countAliveNeigh(self,i,j,isNeigh):
-        #Counts the numer of neighboors from de temporary list (list of the previous generation)
+        #Counts the number of neighboors from de temporary list (list of the previous generation)
+        #isNeigh contains a boolean : True if the cell to analyse is a neighboor of a cell to analyse, false if it is directly a cell to analyse : from a generation to the next one, the neignboors of alive cells must be analysed but not the neighboors of the neighboors
         nbNeigh = 0
         for di,dj in [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]:
             if not isNeigh:
-                self._neighToCellsAlive.setdefault((i+di,j+dj))
+                self._neighToCellsAlive.setdefault((i+di,j+dj)) #If the cell is a neighboor of a cell that must be analysed, it will be analysed
             if (i+di,j+dj) in self._cellsAliveTmp.keys():
                 nbNeigh += 1
         return nbNeigh
 
     def killOrAwake(self,i,j,nbNeigh,alive):
-        #Take the decision to kill or awake a cell
+        #Takes the decision to kill or awake a cell
         if alive:
             if nbNeigh > 3 or nbNeigh < 2:
                 self.kill(i,j)
@@ -240,24 +251,24 @@ class Grid(Canvas):
         #Goes on to the next generation
         t1=time.time()
 
-        self._cellsAliveTmp = dict(self._cellsAlive)
+        self._cellsAliveTmp = dict(self._cellsAlive) #The generation n is copied to calculate the generation n+1
         self._neighToCellsAlive = dict()
 
-        for (i,j) in self._cellsAliveTmp.keys():
+        for (i,j) in self._cellsAliveTmp.keys(): #Alive cells at the generation n are analysed
             nbNeigh = self.countAliveNeigh(i,j,False)
             self.killOrAwake(i,j,nbNeigh,True)
 
-        for (i,j) in self._neighToCellsAlive.keys():
+        for (i,j) in self._neighToCellsAlive.keys(): #Neighboors of alive cells at the generation n are analysed
             if not (i,j) in self._cellsAliveTmp.keys():
-                nbNeigh = self.countAliveNeigh(i,j,True)
+                nbNeigh = self.countAliveNeigh(i,j,True) #True indicates that those cells are neighboors of alive cells (they were dead during the generation n), thus the neighboors of those neighboors won't be added to the list of cells to analyse
                 self.killOrAwake(i,j,nbNeigh,False)
 
         self._generation.set(self._generation.get() + 1)
+        #Game is stopped if every cell is dead during a generation
         if self._nbCells.get() == 0:
             self.stop()
 
         t2=time.time()
-        #print(t2-t1)
 
         if not self._stopped:
             self._dt = dtMax - (self._speed.get() - 1)/99*(dtMax - dtMin) #time beetween generations (milliseconds)

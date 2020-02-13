@@ -1,4 +1,6 @@
 # jeuDeLaVie
+# Needs Python3
+
 Conway's Game of Life
 
 Le Jeu de la Vie a été immaginé par Conway en 1970 (Conway's Game of Life). Il est régi par des règles très simples pour déterminer, à partir d'une génération n, la composition de la génération n+1. En théorie le jeu doit se dérouler sur une grille infinie, mais ces conditions sont évidemment impossibles sur un ordinateur.
