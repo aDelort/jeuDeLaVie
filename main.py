@@ -1,7 +1,7 @@
 ##Imports
 from tkinter import *  
 import time
-
+import gameState as gs
 
 ## Settings
 defaultCellSize = 10
@@ -92,12 +92,14 @@ class MainWindow(Tk):
         #event.x and event.y return coordinates with origin in the corner upper left ((x,y)!=(i,j))
         i,j = self.convertCoordinates(event) 
         if not self._grid._rectSelectActivated.get():
-            self._grid.awake(i,j)
+            awaked = self._grid._game_state.awake(i,j)
+            if awaked: #The cell has been awaked
+                self._grid.drawAliveCell(i,j)
         else:
             #Just color with red the first cell
             if not self._grid._rectSelectedOneCell.get():
                 self._grid._rectSelectedOneCell.set(1)
-                self._grid.createRedCell(i,j)
+                self._grid.drawRedCell(i,j)
                 self._grid._redCell_i = i
                 self._grid._redCell_j = j
             else:
@@ -108,11 +110,16 @@ class MainWindow(Tk):
                 j1,j2 = sorted((self._grid._redCell_j,j))
                 for lig in range(i1,i2+1):
                     for col in range(j1,j2+1):
-                        self._grid.awake(lig,col)
+                        awaked = self._grid._game_state.awake(lig,col)
+                        if awaked:
+                            self._grid.drawAliveCell(lig,col)
+
 
     def rightClick(self,event):
         i,j = self.convertCoordinates(event)
-        self._grid.kill(i,j)
+        killed = self._grid._game_state.kill(i,j)
+        if killed:
+            self._grid.eraseKilledCell(i,j)
 
     def rectSelection(self):
         if self._grid._rectSelectActivated.get(): #Rectangle selection was activated
@@ -134,9 +141,11 @@ class MainWindow(Tk):
 
     def erase(self):
         #Kills every cells
-        cellsAlive = self._grid._cellsAlive.copy()
+        cellsAlive = self._grid._game_state._cellsAlive.copy()
         for i,j in cellsAlive:
-            self._grid.kill(i,j)
+            killed = self._grid._game_state.kill(i,j)
+            if killed:
+                self._grid.eraseKilledCell(i,j)
 
 
 class Grid(Canvas):
@@ -148,16 +157,16 @@ class Grid(Canvas):
         self._xMax = (self._sizeGridX+1)//2 - 1
         self._yMin = -self._sizeGridY//2
         self._yMax = (self._sizeGridY+1)//2 - 1
+        self._game_state = gs.GameState()
+        self._generation = IntVar(0)
+        self._nbCells = IntVar(0) #Total number of cells alive
         self.config(scrollregion=(self._xMin,self._yMin,self._xMax,self._yMax)) #Changing the origin of the coordinates
         self._stopped = True
         self._speed = IntVar()
         self._speed.set(defaultSpeed)
-        self._generation = IntVar(0)
         self._cellSize = IntVar() #Number of pixels
         self._cellSize.set(defaultCellSize)
         self._gridLines = []
-        self._cellsAlive = dict()
-        self._nbCells = IntVar(0) #Total number of cells alive
         self._isShowedGrid = IntVar() #Boolean true if the grid is displayed
         self._isShowedGrid.set(1)
         self._rectSelectActivated = IntVar(0) #Boolean for the state of the self._rectSelectButton (clicked or not)
@@ -181,9 +190,14 @@ class Grid(Canvas):
             #Creation of the new grid
             self.showGrid()
         #Updating the drawing of alive cells
-        for i,j in self._cellsAlive:
-            self.kill(i,j)
-            self.awake(i,j)
+        for i,j in self._game_state._cellsAlive:
+            self.eraseKilledCell(i,j)
+            self.drawAliveCell(i,j)
+
+        if self._rectSelectedOneCell.get():
+            i,j = self._redCell_i,self._redCell_j
+            self.deleteRedCell()
+            self.drawRedCell(i,j)
 
     def showGrid(self):
         #Draws the lines of the grid
@@ -201,25 +215,15 @@ class Grid(Canvas):
         for line in self._gridLines:
             self.delete(line)
 
-    def isAlive(self,i,j):
-        #Returns the state of a cell (alive or not)
-        return (i,j) in self._cellsAlive.keys()
+    def drawAliveCell(self,i,j):
+        self.create_rectangle(j*self._cellSize.get(),i*self._cellSize.get(),(j+1)*self._cellSize.get(),(i+1)*self._cellSize.get(),fill='black',tags=(str(i)+','+str(j)))#(str(i),str(j)))
+        self._nbCells.set(self._nbCells.get()+1)
 
-    def awake(self,i,j):
-        #Cell (i,j): dead -> alive
-        if not self.isAlive(i,j):
-            id = self.create_rectangle(j*self._cellSize.get(),i*self._cellSize.get(),(j+1)*self._cellSize.get(),(i+1)*self._cellSize.get(),fill='black')
-            self._cellsAlive.setdefault((i,j),id)
-            self._nbCells.set(self._nbCells.get()+1)
+    def eraseKilledCell(self,i,j):
+        self.delete(str(i)+','+str(j))
+        self._nbCells.set(self._nbCells.get()-1)
 
-    def kill(self,i,j):
-        #Cell (i,j): alive -> dead
-        if self.isAlive(i,j):
-            id = self._cellsAlive.pop((i,j))
-            self.delete(id)
-            self._nbCells.set(self._nbCells.get()-1)
-
-    def createRedCell(self,i,j):
+    def drawRedCell(self,i,j):
         #Create the red cell (to mark down the first corner of the rectangle selection)
         self._redCellId = self.create_rectangle(j*self._cellSize.get(),i*self._cellSize.get(),(j+1)*self._cellSize.get(),(i+1)*self._cellSize.get(),fill='red')
 
@@ -227,54 +231,27 @@ class Grid(Canvas):
         #Function called when the red cell isn't needed anymore
         self.delete(self._redCellId)
 
-    def countAliveNeigh(self,i,j,isNeigh):
-        #Counts the number of neighboors from de temporary list (list of the previous generation)
-        #isNeigh contains a boolean : True if the cell to analyse is a neighboor of a cell to analyse, false if it is directly a cell to analyse : from a generation to the next one, the neignboors of alive cells must be analysed but not the neighboors of the neighboors
-        nbNeigh = 0
-        for di,dj in [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]:
-            if not isNeigh:
-                self._neighToCellsAlive.setdefault((i+di,j+dj)) #If the cell is a neighboor of a cell that must be analysed, it will be analysed
-            if (i+di,j+dj) in self._cellsAliveTmp.keys():
-                nbNeigh += 1
-        return nbNeigh
-
-    def killOrAwake(self,i,j,nbNeigh,alive):
-        #Takes the decision to kill or awake a cell
-        if alive:
-            if nbNeigh > 3 or nbNeigh < 2:
-                self.kill(i,j)
-        else:
-            if nbNeigh == 3:
-                self.awake(i,j)
-        
     def updateCellsState(self):
-        #Goes on to the next generation
         t1=time.time()
-
-        self._cellsAliveTmp = dict(self._cellsAlive) #The generation n is copied to calculate the generation n+1
-        self._neighToCellsAlive = dict()
-
-        for (i,j) in self._cellsAliveTmp.keys(): #Alive cells at the generation n are analysed
-            nbNeigh = self.countAliveNeigh(i,j,False)
-            self.killOrAwake(i,j,nbNeigh,True)
-
-        for (i,j) in self._neighToCellsAlive.keys(): #Neighboors of alive cells at the generation n are analysed
-            if not (i,j) in self._cellsAliveTmp.keys():
-                nbNeigh = self.countAliveNeigh(i,j,True) #True indicates that those cells are neighboors of alive cells (they were dead during the generation n), thus the neighboors of those neighboors won't be added to the list of cells to analyse
-                self.killOrAwake(i,j,nbNeigh,False)
+        awakedCells,killedCells = self._game_state.goToNextGeneration()
+        for (i,j) in awakedCells:
+            self.drawAliveCell(i,j)
+        for (i,j) in killedCells:
+            self.eraseKilledCell(i,j)
+        t2=time.time()
 
         self._generation.set(self._generation.get() + 1)
+
         #Game is stopped if every cell is dead during a generation
         if self._nbCells.get() == 0:
             self.stop()
-
-        t2=time.time()
 
         if not self._stopped:
             self._dt = dtMax - (self._speed.get() - 1)/99*(dtMax - dtMin) #time beetween generations (milliseconds)
             #If the calculation time is over self._dt, we don't wait anymore to get to the next generation
             #Otherwise, we wait the right time to get to the next generation
             self.after(max(int(self._dt-1000*(t2-t1)),1),self.updateCellsState)
+
 
 
 ## Calls
