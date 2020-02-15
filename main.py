@@ -18,8 +18,8 @@ class MainWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
         self.title('Jeu de la Vie')
-        self._gridWidth = self.winfo_screenwidth()-210
-        self._gridHeight = self.winfo_screenheight()-120
+        self._gridWidth = self.winfo_screenwidth()-200
+        self._gridHeight = self.winfo_screenheight()-60
 
         #Definition of widgets
         self._rightCommands = Frame(self)
@@ -256,5 +256,5 @@ class Grid(Canvas):
 
 ## Calls
 window = MainWindow()
-#window.attributes('-maximized',True)
+window.attributes('-zoomed',True)
 window.mainloop()
