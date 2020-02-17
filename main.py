@@ -19,7 +19,7 @@ class MainWindow(Tk):
         Tk.__init__(self)
         self.title('Jeu de la Vie')
         self._gridWidth = self.winfo_screenwidth()-200
-        self._gridHeight = self.winfo_screenheight()-60
+        self._gridHeight = self.winfo_screenheight()-90
 
         #Definition of widgets
         self._rightCommands = Frame(self)
@@ -146,6 +146,8 @@ class MainWindow(Tk):
             killed = self._grid._game_state.kill(i,j)
             if killed:
                 self._grid.eraseKilledCell(i,j)
+        self._grid.stop()
+        self._grid._generation.set(0)
 
 
 class Grid(Canvas):
@@ -232,21 +234,21 @@ class Grid(Canvas):
         self.delete(self._redCellId)
 
     def updateCellsState(self):
-        t1=time.time()
-        awakedCells,killedCells = self._game_state.goToNextGeneration()
-        for (i,j) in awakedCells:
-            self.drawAliveCell(i,j)
-        for (i,j) in killedCells:
-            self.eraseKilledCell(i,j)
-        t2=time.time()
-
-        self._generation.set(self._generation.get() + 1)
-
-        #Game is stopped if every cell is dead during a generation
-        if self._nbCells.get() == 0:
-            self.stop()
-
         if not self._stopped:
+            t1=time.time()
+            awakedCells,killedCells = self._game_state.goToNextGeneration()
+            for (i,j) in awakedCells:
+                self.drawAliveCell(i,j)
+            for (i,j) in killedCells:
+                self.eraseKilledCell(i,j)
+            t2=time.time()
+
+            self._generation.set(self._generation.get() + 1)
+
+            #Game is stopped if every cell is dead during a generation
+            if self._nbCells.get() == 0:
+                self.stop()
+
             self._dt = dtMax - (self._speed.get() - 1)/99*(dtMax - dtMin) #time beetween generations (milliseconds)
             #If the calculation time is over self._dt, we don't wait anymore to get to the next generation
             #Otherwise, we wait the right time to get to the next generation
