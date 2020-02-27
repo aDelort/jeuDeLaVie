@@ -1,7 +1,10 @@
 ##Imports
 from tkinter import *  
+from tkinter import ttk
 import time
 import gameState as gs
+import madeObjects as mo
+
 
 ## Settings
 defaultCellSize = 10
@@ -18,14 +21,20 @@ class MainWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
         self.title('Jeu de la Vie')
-        self._gridWidth = self.winfo_screenwidth()-200
+        self._gridWidth = self.winfo_screenwidth()-240
         self._gridHeight = self.winfo_screenheight()-90
 
         #Definition of widgets
-        self._rightCommands = Frame(self)
+        self._noteBook = ttk.Notebook(self)
+        self._rightCommandsTab = Frame(self._noteBook)
+        self._noteBook.add(self._rightCommandsTab,text="Commandes")
+        self._objectsListbox = Listbox(self._noteBook)
+        self._noteBook.add(self._objectsListbox,text="Objets")
+
         self._grid = Grid(self,width=self._gridWidth,height=self._gridHeight,bg='grey')
-        self._informationFrame = LabelFrame(self._rightCommands,text="Infos",labelanchor='n')
-        self._commandFrame = LabelFrame(self._rightCommands,text="Commandes",labelanchor='n')
+
+        self._informationFrame = LabelFrame(self._rightCommandsTab,text="Infos",labelanchor='n')
+        self._commandFrame = LabelFrame(self._rightCommandsTab,text="Commandes",labelanchor='n')
         self._nbCellsScaleFrame = LabelFrame(self._commandFrame,text="Taille des cellules")
         self._nbCellsScale = Scale(self._nbCellsScaleFrame,variable=self._grid._cellSize,from_=cellSizeMin,to=cellSizeMax,command=self._grid.updateGrid,orient='horizontal',length=100)
         self._speedScaleFrame = LabelFrame(self._commandFrame,text="Vitesse")
@@ -37,13 +46,17 @@ class MainWindow(Tk):
         self._generationCounter = Label(self._generationCounterFrame,textvariable=self._grid._generation)
         self._cellsCounterFrame = LabelFrame(self._informationFrame,text="Population")
         self._cellsCounter = Label(self._cellsCounterFrame,textvariable=self._grid._nbCells)
+
         self._bottomCommands = Frame(self)
         self._start = Button(self._bottomCommands,text='Démarrer',command=self.start)
         self._stop = Button(self._bottomCommands,text='Stop',command=self._grid.stop)
         self._quit = Button(self._bottomCommands,text='Quitter',command=self.quit)
 
+        self._noteBook.select(self._rightCommandsTab)
+
         #Packing
-        self._rightCommands.pack(padx=10,side=RIGHT)
+        self._noteBook.pack(padx=10,side=RIGHT)
+
         self._informationFrame.pack(side=TOP,pady=30)
         self._generationCounterFrame.pack(side=TOP,pady=10)
         self._generationCounter.pack()
@@ -66,11 +79,15 @@ class MainWindow(Tk):
         self._grid.pack(padx=10,pady=10,side=TOP,anchor='center',expand=False)
 
         #Binding events
-        self._grid.bind("<Button-1>",self.leftClick)
-        self._grid.bind("<Button-3>",self.rightClick)
-        self._grid.bind("<B1-Motion>",self.leftClick)
-        self._grid.bind("<B3-Motion>",self.rightClick)
+        self._grid.bind("<Button-1>",self.leftClickOnGrid)
+        self._grid.bind("<Button-3>",self.rightClickOnGrid)
+        self._grid.bind("<B1-Motion>",self.leftClickOnGrid)
+        self._grid.bind("<B3-Motion>",self.rightClickOnGrid)
 
+        self._objectsListbox.bind("<Button-1>",self.leftClickOnMadeObject)
+
+        #Getting objects from the madeObjects.py file
+        self.importObjects()
 
     def start(self):
         #Start button
@@ -88,7 +105,7 @@ class MainWindow(Tk):
         j = (event.x+self._grid._xMin)//self._grid._cellSize.get()
         return i,j
 
-    def leftClick(self,event):
+    def leftClickOnGrid(self,event):
         #event.x and event.y return coordinates with origin in the corner upper left ((x,y)!=(i,j))
         i,j = self.convertCoordinates(event) 
         if not self._grid._rectSelectActivated.get():
@@ -115,7 +132,7 @@ class MainWindow(Tk):
                             self._grid.drawAliveCell(lig,col)
 
 
-    def rightClick(self,event):
+    def rightClickOnGrid(self,event):
         i,j = self.convertCoordinates(event)
         killed = self._grid._game_state.kill(i,j)
         if killed:
@@ -148,6 +165,14 @@ class MainWindow(Tk):
                 self._grid.eraseKilledCell(i,j)
         self._grid.stop()
         self._grid._generation.set(0)
+
+    def importObjects(self):
+        for obj in mo.objectsList:
+            self._objectsListbox.insert('end',obj.getName())
+
+    def leftClickOnMadeObject(self,event):
+        print(self._objectsListbox.nearest(event.y))
+        #CLIC SUR LA GRILLLLLLLLE
 
 
 class Grid(Canvas):
