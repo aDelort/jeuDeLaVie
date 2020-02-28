@@ -29,10 +29,13 @@ class MainWindow(Tk):
         self._noteBook = ttk.Notebook(self)
         self._rightCommandsTab = Frame(self._noteBook)
         self._noteBook.add(self._rightCommandsTab,text="Commandes")
-        self._objectsListbox = Listbox(self._noteBook)
-        self._noteBook.add(self._objectsListbox,text="Objets")
+        self._objectsTab = Frame(self._noteBook)
+        self._noteBook.add(self._objectsTab,text='Objets')
+        
+        self._objectsListbox = Listbox(self._objectsTab)
+        self._cancelObjectSelectionButton = Button(self._objectsTab,text='Annuler',command=self.unselectObject)
 
-        self._grid = Grid(self,width=self._gridWidth,height=self._gridHeight,bg='grey')
+        self._grid = Grid(self,width=self._gridWidth,height=self._gridHeight,bg='grey',cursor='tcross')
 
         self._informationFrame = LabelFrame(self._rightCommandsTab,text="Infos",labelanchor='n')
         self._commandFrame = LabelFrame(self._rightCommandsTab,text="Commandes",labelanchor='n')
@@ -56,7 +59,10 @@ class MainWindow(Tk):
         self._noteBook.select(self._rightCommandsTab)
 
         #Packing
+        # self._objectsTab
         self._noteBook.pack(padx=10,side=RIGHT)
+        self._objectsListbox.pack(side=TOP)
+        self._cancelObjectSelectionButton.pack(pady=10,side=TOP)
 
         self._informationFrame.pack(side=TOP,pady=30)
         self._generationCounterFrame.pack(side=TOP,pady=10)
@@ -180,7 +186,7 @@ class MainWindow(Tk):
     def leftClickOnMadeObject(self,event):
         self._objectSelected = self._objectsListbox.nearest(event.y)
 
-    def unselectObject(self,event):
+    def unselectObject(self,*event):
         self._objectsListbox.selection_clear(0,'end')
         self._objectSelected = -1
 
