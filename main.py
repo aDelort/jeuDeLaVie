@@ -1,4 +1,4 @@
-##Imports
+## Imports
 from tkinter import *  
 from tkinter import ttk
 import time
@@ -21,6 +21,7 @@ class MainWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
         self.title('Jeu de la Vie')
+        self._objectSelected = -1 #Index on the object selected in the listbox (-1 if no object is selected)
         self._gridWidth = self.winfo_screenwidth()-240
         self._gridHeight = self.winfo_screenheight()-90
 
@@ -85,6 +86,7 @@ class MainWindow(Tk):
         self._grid.bind("<B3-Motion>",self.rightClickOnGrid)
 
         self._objectsListbox.bind("<Button-1>",self.leftClickOnMadeObject)
+        self._noteBook.bind("<Button-1>",self.unselectObject)
 
         #Getting objects from the madeObjects.py file
         self.importObjects()
@@ -108,13 +110,9 @@ class MainWindow(Tk):
     def leftClickOnGrid(self,event):
         #event.x and event.y return coordinates with origin in the corner upper left ((x,y)!=(i,j))
         i,j = self.convertCoordinates(event) 
-        if not self._grid._rectSelectActivated.get():
-            awaked = self._grid._game_state.awake(i,j)
-            if awaked: #The cell has been awaked
-                self._grid.drawAliveCell(i,j)
-        else:
-            #Just color with red the first cell
+        if self._grid._rectSelectActivated.get():
             if not self._grid._rectSelectedOneCell.get():
+                #Just color with red the first cell
                 self._grid._rectSelectedOneCell.set(1)
                 self._grid.drawRedCell(i,j)
                 self._grid._redCell_i = i
@@ -130,6 +128,15 @@ class MainWindow(Tk):
                         awaked = self._grid._game_state.awake(lig,col)
                         if awaked:
                             self._grid.drawAliveCell(lig,col)
+        elif self._objectSelected >= 0:
+            for (di,dj) in mo.objectsList[self._objectSelected].getMatrix():
+                awaked = self._grid._game_state.awake(i+di,j+dj)
+                if awaked: #The cell has been awaked
+                    self._grid.drawAliveCell(i+di,j+dj)
+        else:
+            awaked = self._grid._game_state.awake(i,j)
+            if awaked: #The cell has been awaked
+                self._grid.drawAliveCell(i,j)
 
 
     def rightClickOnGrid(self,event):
@@ -171,8 +178,11 @@ class MainWindow(Tk):
             self._objectsListbox.insert('end',obj.getName())
 
     def leftClickOnMadeObject(self,event):
-        print(self._objectsListbox.nearest(event.y))
-        #CLIC SUR LA GRILLLLLLLLE
+        self._objectSelected = self._objectsListbox.nearest(event.y)
+
+    def unselectObject(self,event):
+        self._objectsListbox.selection_clear(0,'end')
+        self._objectSelected = -1
 
 
 class Grid(Canvas):
