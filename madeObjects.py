@@ -1,3 +1,5 @@
+import os
+
 ## Class definition
 
 class MadeObject():
@@ -8,26 +10,29 @@ class MadeObject():
 	def getName(self):
 		return self._name
 
-	def getMatrix(self):
+	def getAliveCellsList(self):
 		return self._aliveCellsList
 
 
+def getAliveCellsList(path):
+	file = open(path,'r').read().split('\n')
+	information = file[0:3]
+	drawing = file[4:]
+	aliveCellsList = []
+	name = information[0]
+	di,dj = int(information[1]),int(information[2])
+	for i in range(len(drawing)):
+		for j in range(len(drawing[0])):
+			if drawing[i][j] == 'X':
+				aliveCellsList.append((i+di,j+dj))
+	return name,aliveCellsList
+
+
 ## List of objects
+fileList = os.listdir('./Premade_objects')
 objectsList = []
 
-#Slider
-mat = [(1,0),(2,1),(2,2),(1,2),(0,2)]
-slider = MadeObject('Glisseur',mat)
-objectsList.append(slider)
-
-#Blinker
-mat = [(0,0),(0,1),(0,2)]
-blinker = MadeObject('Clignotant',mat)
-objectsList.append(blinker)
-
-#Frog
-mat=[(0,0),(0,1),(0,2),(1,1),(1,2),(1,3)]
-frog = MadeObject('Grenouille',mat)
-objectsList.append(frog)
-
-#
+for fileName in fileList:
+	name,aliveCellsList = getAliveCellsList('./Premade_objects/' + fileName)
+	obj = MadeObject(name,aliveCellsList)
+	objectsList.append(obj)

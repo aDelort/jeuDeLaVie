@@ -135,7 +135,7 @@ class MainWindow(Tk):
                         if awaked:
                             self._grid.drawAliveCell(lig,col)
         elif self._objectSelected >= 0:
-            for (di,dj) in mo.objectsList[self._objectSelected].getMatrix():
+            for (di,dj) in mo.objectsList[self._objectSelected].getAliveCellsList():
                 awaked = self._grid._game_state.awake(i+di,j+dj)
                 if awaked: #The cell has been awaked
                     self._grid.drawAliveCell(i+di,j+dj)
