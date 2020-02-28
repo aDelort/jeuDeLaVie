@@ -32,7 +32,7 @@ class MainWindow(Tk):
         self._objectsTab = Frame(self._noteBook)
         self._noteBook.add(self._objectsTab,text='Objets')
         
-        self._objectsListbox = Listbox(self._objectsTab,selectmode=SINGLE,height=0)
+        self._objectsListbox = Listbox(self._objectsTab,selectmode=SINGLE,height=0,cursor='trek')
         self._cancelObjectSelectionButton = Button(self._objectsTab,text='Annuler',command=self.unselectObject)
 
         self._grid = Grid(self,width=self._gridWidth,height=self._gridHeight,bg='grey',cursor='tcross')
@@ -153,14 +153,17 @@ class MainWindow(Tk):
 
     def rectSelection(self):
         if self._grid._rectSelectActivated.get(): #Rectangle selection was activated
-            self._grid._rectSelectActivated.set(0)
-            self._rectSelectButton.config(relief=RAISED)
-            if self._grid._rectSelectedOneCell.get():
-                self._grid.deleteRedCell()
-                self._grid._rectSelectedOneCell.set(0)
+            self.cancelRectSelection()
         else: #Rectangle selection wasn't activated
             self._grid._rectSelectActivated.set(1)
             self._rectSelectButton.config(relief=SUNKEN)
+
+    def cancelRectSelection(self):
+        self._grid._rectSelectActivated.set(0)
+        self._rectSelectButton.config(relief=RAISED)
+        if self._grid._rectSelectedOneCell.get():
+            self._grid.deleteRedCell()
+            self._grid._rectSelectedOneCell.set(0)
 
     def showOrHideGrid(self):
         #Linked to the checkbox, hides of shows the grid
@@ -187,8 +190,12 @@ class MainWindow(Tk):
         self._objectSelected = self._objectsListbox.nearest(event.y)
 
     def unselectObject(self,*event):
+        #Delete th selected object if it exists
         self._objectsListbox.selection_clear(0,'end')
         self._objectSelected = -1
+        #If rectangle selection was activated
+        if self._grid._rectSelectActivated.get():
+            self.cancelRectSelection()
 
 
 class Grid(Canvas):
