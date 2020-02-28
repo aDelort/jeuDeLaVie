@@ -2,8 +2,8 @@
 from tkinter import *  
 from tkinter import ttk
 import time
-import gameState as gs
-import madeObjects as mo
+import GameState as gs
+import MadeObjects as mo
 
 
 ## Settings
@@ -32,7 +32,7 @@ class MainWindow(Tk):
         self._objectsTab = Frame(self._noteBook)
         self._noteBook.add(self._objectsTab,text='Objets')
         
-        self._objectsListbox = Listbox(self._objectsTab)
+        self._objectsListbox = Listbox(self._objectsTab,selectmode=SINGLE,height=0)
         self._cancelObjectSelectionButton = Button(self._objectsTab,text='Annuler',command=self.unselectObject)
 
         self._grid = Grid(self,width=self._gridWidth,height=self._gridHeight,bg='grey',cursor='tcross')
