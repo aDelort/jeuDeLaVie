@@ -22,7 +22,7 @@ def getAliveCellsList(path):
 	name = information[0]
 	di,dj = int(information[1]),int(information[2])
 	for i in range(len(drawing)):
-		for j in range(len(drawing[0])):
+		for j in range(len(drawing[i])):
 			if drawing[i][j] == 'X':
 				aliveCellsList.append((i+di,j+dj))
 	return name,aliveCellsList

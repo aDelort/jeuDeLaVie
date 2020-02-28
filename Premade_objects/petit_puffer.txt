@@ -1,0 +1,22 @@
+Petit Puffer
+-2
+0
+
+...X
+....X
+X...X
+.XXXX
+.
+.
+.
+X
+.XX
+..X
+..X
+.X
+.
+.
+...X
+....X
+X...X
+.XXXX

@@ -1,0 +1,9 @@
+Vaisseau moyen
+-1
+0
+
+..X
+X...X
+.....X
+X....X
+.XXXXX

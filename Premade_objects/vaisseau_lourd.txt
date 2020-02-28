@@ -1,0 +1,9 @@
+Vaisseau lourd
+-1
+0
+
+..XX
+X....X
+......X
+X.....X
+.XXXXXX
