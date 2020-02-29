@@ -32,7 +32,7 @@ class MainWindow(Tk):
         self._objectsTab = Frame(self._noteBook)
         self._noteBook.add(self._objectsTab,text='Objets')
         
-        self._objectsListbox = Listbox(self._objectsTab,selectmode=SINGLE,height=0,cursor='trek')
+        self._objectsListbox = Listbox(self._objectsTab,selectmode=SINGLE,height=0,cursor='pencil')
         self._cancelObjectSelectionButton = Button(self._objectsTab,text='Annuler',command=self.unselectObject)
 
         self._grid = Grid(self,width=self._gridWidth,height=self._gridHeight,bg='grey',cursor='tcross')
