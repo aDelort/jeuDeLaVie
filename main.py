@@ -306,5 +306,5 @@ class Grid(Canvas):
 
 ## Calls
 window = MainWindow()
-window.attributes('-zoomed',True)
+# window.attributes('-zoomed',True)
 window.mainloop()

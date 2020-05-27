@@ -15,9 +15,7 @@ class MadeObject():
 
 
 def getAliveCellsList(path):
-    a = open(path,'r')
-    print(a)
-    file = json.load(a)
+    file = json.loads(open(path,'r').read())
     # file = open(path,'r').read().split('\n')
     name, di, dj, drawing = file['name'], file['di'], file['dj'], file['drawing']
     aliveCellsList = []
@@ -33,6 +31,7 @@ fileList = os.listdir('./Premade_objects')
 objectsList = []
 
 for fileName in fileList:
-    name, aliveCellsList = getAliveCellsList('./Premade_objects/' + fileName)
-    obj = MadeObject(name, aliveCellsList)
-    objectsList.append(obj)
+    if fileName[-5:] == '.json':
+        name, aliveCellsList = getAliveCellsList('./Premade_objects/' + fileName)
+        obj = MadeObject(name, aliveCellsList)
+        objectsList.append(obj)
