@@ -1,8 +1,0 @@
-Vaisseau léger
-0
-0
-
-X..X
-....X
-X...X
-.XXXX
