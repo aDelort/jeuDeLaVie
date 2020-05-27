@@ -1,0 +1,12 @@
+{
+    "name": "Vaisseau Lourd",
+    "di": -1,
+    "dj": 0,
+    "drawing": [
+        "..XX",
+        "X....X",
+        "......X",
+        "X.....X",
+        ".XXXXXX"
+    ]
+}
