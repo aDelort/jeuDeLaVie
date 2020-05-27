@@ -1,0 +1,12 @@
+{
+    "name": "Vaisseau Moyen",
+    "di": -1,
+    "dj": 0,
+    "drawing": [
+        "..X",
+        "X...X",
+        ".....X",
+        "X....X",
+        ".XXXXX"
+    ]
+}
